@@ -6,18 +6,18 @@ categories: reversing
 ---
 Have you seen those RGB LED soundbars with Bluetooth control on AliExpress? I got one and wanted to figure out how it worked. Turns out, it uses Bluetooth Low Energy to talk to your phone and has a custom binary protocol for LED colors and patterns.
 
-![alt text](images/1/3.png)
+![alt text](https://rootkit.zip/images/1/3.png)
 
 To reverse engineer the protocol, I used a Bluetooth HCISNOOP to capture the packets sent by the app and analyzed their contents. Once I understood how the protocol worked, I could control the soundbar directly from my phone without the default app. 
 
-![alt text](images/1/1.png)
+![alt text](https://rootkit.zip/images/1/1.png)
 The communication is pretty simple. it uses the handle 0x0009 and sends the data of length 9 byte to control the device. 
 
 The app has an feature to get the input from the phone's mic and control of the rgb light. it is useless because they control the static RGB data and not the pattern from the audio input. 
 
-![alt text](images/1/2.png)
+![alt text](https://rootkit.zip/images/1/2.png)
 
-You can download the hcisnoop data [here](data/001_ble_rgb.log.gz) (it is in log format. open it from wireshark)
+You can download the hcisnoop data [here](https://rootkit.zip/data/001_ble_rgb.log.gz) (it is in log format. open it from wireshark)
 
 {% highlight ruby %}
 7e0705039eff0010ef is an example packet breakdown for RGB control.
