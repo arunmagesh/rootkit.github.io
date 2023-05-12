@@ -45,3 +45,5 @@ To set the rgb the data should be
 
 
 if you want to test it you can either use nrfconnect or chrome's internal bluetooth GATT tool {% highlight ruby %} about://bluetooth-internals {% endhighlight %}
+
+some cool video [![Watch the video]](https://youtube.com/shorts/oRU3bCV6geo)
