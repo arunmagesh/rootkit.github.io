@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BLE Fuzzing Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .input-group {
+      margin-bottom: 10px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .input-group input[type="text"],
+    .input-group input[type="number"] {
+      width: 100%;
+      padding: 5px;
+    }
+
+    .input-group select {
+      width: 100%;
+      padding: 5px;
+    }
+
+    .button-group {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .log-container {
+      width: 100%;
+      height: 150px;
+      border: 1px solid #ccc;
+      overflow-y: scroll;
+      padding: 5px;
+    }
+
+    .log-message {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BLE Fuzzing Demo</h1>
+
+    <div class="input-group">
+      <label for="serviceInput">Service UUID:</label>
+      <input type="text" id="serviceInput" />
+
+    </div> 
+    <div class="button-group">
+      <button id="connectButton">Connect to BLE Device</button>
+    </div>
+
+    <div class="input-group">
+      <label for="characteristicSelect">Characteristic UUID:</label>
+      <select id="characteristicSelect"></select>
+    </div>
+
+    <div class="input-group">
+      <label for="fuzzedValueInput">Fuzzed Data:</label>
+      <input type="text" id="fuzzedValueInput" />
+    </div>
+
+    <div class="input-group">
+      <label for="iterationsInput">Number of Iterations:</label>
+      <input type="number" id="iterationsInput" />
+    </div>
+
+    <div class="input-group">
+      <label for="writeMethodSelect">Write Method:</label>
+      <select id="writeMethodSelect">
+        <option value="writeRequest">Write Request</option>
+        <option value="writeCommand">Write Command</option>
+      </select>
+    </div>
+
+    <div class="button-group">
+      <button id="fuzzButton">Fuzz Characteristic Value</button>     
+    </div>
+
+    <div class="input-group">
+      <label for="commandInput">Command:</label>
+      <input type="text" id="commandInput" />      
+    </div>
+
+    <div class="button-group">
+      <button id="sendCommandButton">Send Command</button>
+    </div>
+
+    <div class="log-container" id="log"></div>
+  </div>
+  <script>
+    // HTML elements
+    const connectButton = document.getElementById('connectButton');
+    const serviceInput = document.getElementById('serviceInput');
+    const characteristicSelect = document.getElementById('characteristicSelect');
+    const fuzzedValueInput = document.getElementById('fuzzedValueInput');
+    const iterationsInput = document.getElementById('iterationsInput');
+    const writeMethodSelect = document.getElementById('writeMethodSelect');
+    const fuzzButton = document.getElementById('fuzzButton');
+    const sendCommandButton = document.getElementById('sendCommandButton');
+    const logDiv = document.getElementById('log');
+
+    // Bluetooth variables
+    let device;
+    let characteristic;
+    let lastValues = [];
+
+    // Connect to BLE device
+    connectButton.addEventListener('click', async () => {
+      try {
+        // Request device access
+        device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: [serviceInput.value] }],
+        });
+
+        // Connect to the selected device
+        const server = await device.gatt.connect();
+
+        // Discover the desired service
+        const service = await server.getPrimaryService(serviceInput.value);
+
+        // Discover characteristics within the service
+        const characteristics = await service.getCharacteristics();
+
+        // Clear the characteristicSelect options
+        characteristicSelect.innerHTML = '';
+
+        // Filter and populate the characteristicSelect with writable characteristic UUID options
+        for (const characteristic of characteristics) {
+          if (characteristic.properties.write) {
+            const option = document.createElement('option');
+            option.value = characteristic.uuid;
+            option.textContent = characteristic.uuid;
+            characteristicSelect.appendChild(option);
+          }
+        }
+
+        addToLog('Connected to BLE device and retrieved writable characteristics!');
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    });
+
+    // Fuzz characteristic values
+    fuzzButton.addEventListener('click', async () => {
+      try {
+        const selectedCharacteristicUuid = characteristicSelect.value;
+        if (!selectedCharacteristicUuid) {
+          console.error('No characteristic selected.');
+          return;
+        }
+
+        // Retrieve the desired characteristic
+        const selectedService = await device.gatt.getPrimaryService(serviceInput.value);
+        characteristic = await selectedService.getCharacteristic(selectedCharacteristicUuid);
+
+        // Get the fuzzed input from the input field
+        const fuzzedInput = fuzzedValueInput.value;
+        const iterations = parseInt(iterationsInput.value);
+        const writeMethod = writeMethodSelect.value;
+
+        // Generate the fuzzed input
+        const fuzzedInputArray = generateFuzzedInputArray(fuzzedInput, iterations);
+
+        for (let i = 0; i < iterations; i++) {
+          const fuzzedData = getFuzzedData(fuzzedInput, i);
+          addToLog(`Fuzzed Data (${i + 1}): ${fuzzedData}`);
+
+          // Write the fuzzed input to the characteristic
+          if (writeMethod === 'writeRequest') {
+            await characteristic.writeValueWithResponse(fuzzedInputArray);
+	    console.log(fuzzedInputArray);
+          } else if (writeMethod === 'writeCommand') {
+            await characteristic.writeValueWithoutResponse(fuzzedInputArray);
+          }
+
+          // Add the value to the lastValues array
+          lastValues.push(fuzzedData);
+
+          // Keep only the last 5 values
+          if (lastValues.length > 5) {
+            lastValues.shift(); // Remove the oldest value
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    });
+
+    // Send a single command
+    sendCommandButton.addEventListener('click', async () => {
+      try {
+        const selectedCharacteristicUuid = characteristicSelect.value;
+        if (!selectedCharacteristicUuid) {
+          console.error('No characteristic selected.');
+          return;
+        }
+
+        // Retrieve the desired characteristic
+        const selectedService = await device.gatt.getPrimaryService(serviceInput.value);
+        characteristic = await selectedService.getCharacteristic(selectedCharacteristicUuid);
+
+        // Get the command from the input field
+        const command = commandInput.value;
+        const writeMethod = writeMethodSelect.value;
+
+        // Convert the command to an ArrayBuffer
+        const commandArray = new Uint8Array(command.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+        // Write the command to the characteristic
+        if (writeMethod === 'writeRequest') {
+          await characteristic.writeValueWithResponse(commandArray);
+        } else if (writeMethod === 'writeCommand') {
+          await characteristic.writeValueWithoutResponse(commandArray);
+        }
+
+        addToLog(`Command written to characteristic: ${command}`);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    });
+
+    // Generate a fuzzed input array based on the given input and iteration index
+    function generateFuzzedInputArray(input, iterationIndex) {
+      const fuzzedInputArray = new Uint8Array(input.length / 2);
+
+      let index = 0;
+      for (let j = 0; j < input.length; j += 2) {
+        const byte = input.substr(j, 2);
+        if (byte === 'xx') {
+          fuzzedInputArray[index] = getRandomByte();
+        } else {
+          fuzzedInputArray[index] = parseInt(byte, 16);
+        }
+        index++;
+      }
+
+      return fuzzedInputArray;
+    }
+
+    // Generate a random byte value
+    function getRandomByte() {
+      return Math.floor(Math.random() * 256);
+    }
+
+    // Get the fuzzed data string based on the given input and iteration index
+    function getFuzzedData(input, iterationIndex) {
+      let fuzzedData = '';
+      let index = 0;
+      for (let j = 0; j < input.length; j += 2) {
+        const byte = input.substr(j, 2);
+        if (byte === 'xx') {
+          const randomByte = getRandomByte().toString(16).padStart(2, '0');
+          fuzzedData += randomByte;
+        } else {
+          fuzzedData += byte;
+        }
+        index++;
+      }
+      return fuzzedData;
+    }
+
+    // Function to add log messages to the logDiv
+    function addToLog(message) {
+      const logMessage = document.createElement('p');
+      logMessage.textContent = message;
+      logDiv.appendChild(logMessage);
+    }
+  </script>
+</body>
+</html>
