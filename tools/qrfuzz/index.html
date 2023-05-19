@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" />
+	<style>
+		.qr-code {
+			max-width: 200px;
+			margin: 10px;
+		}
+
+		.container {
+			max-width: 600px;
+			margin: 0 auto;
+			padding-top: 50px;
+		}
+
+		.title {
+			text-align: center;
+			font-size: 28px;
+			margin-bottom: 20px;
+		}
+
+		.form-group {
+			margin-bottom: 15px;
+		}
+
+		.qr-code-image {
+			text-align: center;
+			margin-top: 20px;
+		}
+
+		.btn-generate {
+			width: 100%;
+			background-color: #4caf50;
+			border: none;
+			color: white;
+			padding: 12px 20px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 16px;
+			border-radius: 4px;
+			cursor: pointer;
+		}
+
+		.btn-generate:hover {
+			background-color: #45a049;
+		}
+
+		.data-window {
+			border: 1px solid #ccc;
+			max-height: 200px;
+			overflow-y: scroll;
+			margin-top: 20px;
+			padding: 10px;
+		}
+
+		.data-window p {
+			margin-bottom: 5px;
+		}
+	</style>
+	<title>QR Code Fuzzer</title>
+</head>
+<body>
+	<div class="container">
+		<h2 class="title">QR Code Fuzzer</h2>
+		<div class="form-group">
+			<label for="fixedf">First Fixed:</label>
+			<input type="text" class="form-control" id="fixedf" placeholder="Enter first fixed" value="">
+		</div>
+		 <div class="form-group">
+			<label for="content">Fuzz Section:</label>
+			<input type="text" class="form-control" id="content" placeholder="Enter fuzz section" value="">
+		</div>
+		<div class="form-group">
+			<label for="fixedb">Last Fixed:</label>
+			<input type="text" class="form-control" id="fixedb" placeholder="Enter last fixed if any" value="">
+		</div>
+		<div class="form-group">
+			<label for="number">Number of Iterations:</label>
+			<input type="text" class="form-control" id="number" placeholder="Enter number of iterations" value="">
+		</div>
+		<div class="form-group">
+			<label for="delay">Delay (ms):</label>
+			<input type="number" class="form-control" id="delay" placeholder="Enter delay between QR codes (ms)" value="200">
+		</div>
+		<div class="form-group">
+			<button type="button" class="btn btn-generate" id="generate" onclick="createQR()">Generate QR Codes</button>
+		</div>
+		<div id="qrCodeMessage" class="text-center"></div>
+		<div class="qr-code-image">
+			<img src="https://chart.googleapis.com/chart?cht=qr&chl=Hello+World&chs=160x160&chld=L|0" class="qr-code img-thumbnail img-responsive">
+		</div>
+		<div class="data-window" id="dataWindow"></div>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+	<script src="https://randojs.com/2.0.0.js"></script>
+	<script>
+		async function createQR() {
+			const iterations = parseInt(document.getElementById('number').value);
+			const fuzzSection = document.getElementById('content').value;
+			const fixedF = document.getElementById('fixedf').value;
+			const fixedB = document.getElementById('fixedb').value;
+			const delay = parseInt(document.getElementById('delay').value);
+			const dataWindow = document.getElementById('dataWindow');
+
+			dataWindow.innerHTML = ''; // Clear previous data
+
+			for (let i = 0; i < iterations; i++) {
+				const randomNumber = rando(parseInt(fuzzSection));
+				console.log(randomNumber);
+				await setImage(randomNumber);
+
+				const dataEntry = document.createElement('p');
+				dataEntry.textContent = `${fixedF}${randomNumber}${fixedB}`;
+				dataWindow.appendChild(dataEntry);
+
+				await new Promise(r => setTimeout(r, delay));
+			}
+		}
+
+		async function setImage(randomNumber) {
+			const fixedF = document.getElementById('fixedf').value;
+			const fixedB = document.getElementById('fixedb').value;
+			const finalURL = `https://chart.googleapis.com/chart?cht=qr&chl=${fixedF}${randomNumber}${fixedB}&chs=177x177&chld=L|0`;
+			$('.qr-code').attr('src', finalURL);
+		}
+	</script>
+</body>
+</html>
