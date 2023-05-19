@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Tools
-permalink: /tools/
+permalink: /tools-i/
 ---
 
 some random tools i build and use. maybe or maynot be usefull 
