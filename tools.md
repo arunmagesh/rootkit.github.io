@@ -6,7 +6,7 @@ permalink: /tools-i/
 
 some random tools i build and use. maybe or maynot be usefull 
 
- [QR Code bruteforcer]: (https://rootkit.zip/tools/qrfuzz/index.html)
+<a href="https://rootkit.zip/tools/qrfuzz/index.html">https://rootkit.zip/tools/qrfuzz/index.html</a>
 
  some are in github as well. 
 
