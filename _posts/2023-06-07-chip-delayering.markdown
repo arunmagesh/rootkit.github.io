@@ -9,7 +9,7 @@ This is a note for reference if someone wants to recreate or optimize it. This i
 ![1](https://rootkit.zip/images/2/1.jpg)
 
 For this one i am using the old Intel pentium processor. delidding in this case is simple and can be found here. 
-[![Watch the video for delidding ]](https://youtube.com/shorts/oRU3bCV6geo)
+[![Watch the video for delidding ]](https://youtube.com/shorts/-J5judS94JE)
 
 
 
@@ -34,5 +34,3 @@ Here are some sample images.
 ![6](https://rootkit.zip/images/2/6.jpg)
 
 Will add more as i learn more. 
-
-some cool video [![Watch the video]](https://youtube.com/shorts/-J5judS94JE)
