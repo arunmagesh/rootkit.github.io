@@ -6,9 +6,9 @@ categories: growing
 ---
 
 So i have been trying to convert all my avacado seed into a plant because i like gardening. 
-after a bunch of trail and error.  i found a simple solution which works without any rocket science. 
+after a bunch of trail and error.  i found a simpler solution which works without any rocket science. 
 
-Step
+Steps which worked for me:
 
 >> Soak the seed in water for few days so the black skin is wonky and soggy. 
 >> remove the black peel and just the white part of the seed. 
