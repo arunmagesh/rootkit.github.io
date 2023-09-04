@@ -10,14 +10,14 @@ after a bunch of trail and error.  i found a simpler solution which works withou
 
 Steps which worked for me:
 
->> Soak the seed in water for few days so the black skin is wonky and soggy. 
->> remove the black peel and just the white part of the seed. 
->> put in a small container with water exactly half of the seed sinking. 
->> leave it for atleast a month. 
->> it will automatically start growing. 
->> once you see green on the outside growing, 
->> move to a pot with soil. 
->> avacado grow really fast and tall, so cut the tip of the plant to make it grow wider (plant abuse but we are arse)
+1. Soak the seed in water for few days so the black skin is wonky and soggy. 
+2. remove the black peel and just the white part of the seed. 
+3. put in a small container with water exactly half of the seed sinking. 
+4. leave it for atleast a month. 
+5. it will automatically start growing. 
+6. once you see green on the outside growing, 
+7. move to a pot with soil. 
+8. avacado grow really fast and tall, so cut the tip of the plant to make it grow wider (plant abuse but we are arse)
 
 
 Enjoy avacado. 
