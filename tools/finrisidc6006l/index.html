@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Supply Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px;
+        }
+
+        .button-group button, .switch-label {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .button-group button:hover {
+            background-color: #0056b3;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px;
+        }
+
+        .input-group input[type="text"] {
+            padding: 5px;
+            font-size: 14px;
+            width: 80px;
+        }
+
+        /* Styling for switches */
+        .switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .switch input {
+            display: none;
+        }
+
+        .slider {
+            width: 40px;
+            height: 20px;
+            background-color: #ccc;
+            position: relative;
+            border-radius: 20px;
+            transition: .4s;
+        }
+
+        .slider:before {
+            content: "";
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            position: absolute;
+            border-radius: 50%;
+            left: 2px;
+            top: 2px;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #007bff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Label styling */
+        .control-label {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* Optional: Add more styles as needed */
+    </style>
+</head>
+<body>
+    <h1>Power Supply Control</h1>
+
+    <!-- Control Buttons and Inputs -->
+    <div class="button-group">
+        <button id="connectButton">Connect to Serial Device</button>
+    </div>
+
+    <div class="button-group">
+        <label class="switch">
+            <input type="checkbox" id="enableLogsButton">
+            <span class="slider"></span>
+        </label>
+        <label class="control-label">Enable Logs</label>
+    </div>
+
+    <div class="button-group">
+        <label class="switch">
+            <input type="checkbox" id="powerOnButton">
+            <span class="slider"></span>
+        </label>
+        <label class="control-label">Power On</label>
+    </div>
+
+    <div class="button-group">
+        <button id="disconnectButton" disabled>Disconnect</button>
+    </div>
+
+    <h2>Control Commands</h2>
+
+    <div class="input-group">
+        <label class="control-label">Voltage:</label>
+        <input type="text" id="voltageInput" placeholder="e.g., 5.0">
+        <button id="setVoltageButton">Set Voltage</button>
+    </div>
+
+    <div class="input-group">
+        <label class="control-label">Current:</label>
+        <input type="text" id="currentInput" placeholder="e.g., 3.0">
+        <button id="setCurrentButton">Set Current</button>
+    </div>
+
+    <div class="input-group">
+        <label class="control-label">OVP:</label>
+        <input type="text" id="ovpInput" placeholder="e.g., 5.0">
+        <button id="setOVPButton">Set OVP</button>
+    </div>
+
+    <div class="input-group">
+        <label class="control-label">OCP:</label>
+        <input type="text" id="ocpInput" placeholder="e.g., 3.0">
+        <button id="setOCPButton">Set OCP</button>
+    </div>
+
+    <div class="input-group">
+        <label class="control-label">OPP:</label>
+        <input type="text" id="oppInput" placeholder="e.g., 80">
+        <button id="setOPPButton">Set OPP</button>
+    </div>
+
+    <div class="input-group">
+        <label class="control-label">OHP Hours:</label>
+        <input type="text" id="ohpHoursInput" placeholder="e.g., 01">
+        <button id="setOHPHoursButton">Set OHP Hours</button>
+    </div>
+
+    <div class="input-group">
+        <label class="control-label">OHP Minutes:</label>
+        <input type="text" id="ohpMinutesInput" placeholder="e.g., 02">
+        <button id="setOHPMinutesButton">Set OHP Minutes</button>
+    </div>
+
+    <div class="input-group">
+        <label class="control-label">OHP Seconds:</label>
+        <input type="text" id="ohpSecondsInput" placeholder="e.g., 03">
+        <button id="setOHPSecondsButton">Set OHP Seconds</button>
+    </div>
+
+    <div class="button-group">
+        <label class="switch">
+            <input type="checkbox" id="enableTimeProtectionButton">
+            <span class="slider"></span>
+        </label>
+        <label class="control-label">Time Protection</label>
+    </div>
+
+    <script>
+        let port;
+
+        async function connectToSerialDevice() {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 });
+                console.log('Connected to serial device.');
+                document.getElementById('disconnectButton').removeAttribute('disabled');
+                document.getElementById('enableLogsButton').removeAttribute('disabled');
+                document.getElementById('powerOnButton').removeAttribute('disabled');
+            } catch (error) {
+                console.error('Error connecting to serial device:', error);
+            }
+        }
+
+        function disconnectFromSerialDevice() {
+            if (port && port.readable) {
+                port.close();
+                console.log('Disconnected from serial device.');
+                document.getElementById('disconnectButton').setAttribute('disabled', 'disabled');
+                document.getElementById('enableLogsButton').setAttribute('disabled', 'disabled');
+                document.getElementById('powerOnButton').setAttribute('disabled', 'disabled');
+            }
+        }
+
+        async function sendCommand(command) {
+            if (port && port.writable) {
+                const encoder = new TextEncoder();
+                const writer = port.writable.getWriter();
+                await writer.write(encoder.encode(command + '\r\n')); // Add \r\n to the command
+                writer.releaseLock();
+                console.log('Sent command:', command);
+            } else {
+                console.error('Serial port not open.');
+            }
+        }
+
+        // Command functions
+        function enableLogs() {
+            const enableLogsButton = document.getElementById('enableLogsButton');
+            if (enableLogsButton.checked) {
+                sendCommand('Q');
+            } else {
+                sendCommand('W');
+            }
+        }
+
+        function powerOn() {
+            const powerOnButton = document.getElementById('powerOnButton');
+            if (powerOnButton.checked) {
+                sendCommand('N');
+            } else {
+                sendCommand('F');
+            }
+        }
+
+        function formatWithLeadingZeros(value, digits) {
+            return value.toString().padStart(digits, '0');
+        }
+
+        function setVoltage() {
+            const voltageValue = document.getElementById('voltageInput').value;
+            const formattedValue = formatWithLeadingZeros(parseFloat(voltageValue) * 100, 4);
+            sendCommand(`V${formattedValue}`);
+        }
+
+        function setCurrent() {
+            const currentValue = document.getElementById('currentInput').value;
+            const formattedValue = formatWithLeadingZeros(parseFloat(currentValue) * 1000, 4);
+            sendCommand(`I${formattedValue}`);
+        }
+
+        function setOVP() {
+            const ovpValue = document.getElementById('ovpInput').value;
+            const formattedValue = formatWithLeadingZeros(parseFloat(ovpValue) * 100, 4);
+            sendCommand(`B${formattedValue}`);
+        }
+
+        function setOCP() {
+            const ocpValue = document.getElementById('ocpInput').value;
+            const formattedValue = formatWithLeadingZeros(parseFloat(ocpValue) * 1000, 4);
+            sendCommand(`D${formattedValue}`);
+        }
+
+        function setOPP() {
+            const oppValue = document.getElementById('oppInput').value;
+            const formattedValue = formatWithLeadingZeros(parseFloat(oppValue) * 10, 4);
+            sendCommand(`E${formattedValue}`);
+        }
+
+        function setOHPHours() {
+            const ohpHoursValue = document.getElementById('ohpHoursInput').value;
+            const formattedValue = formatWithLeadingZeros(parseInt(ohpHoursValue), 2);
+            sendCommand(`H${formattedValue}`);
+        }
+
+        function setOHPMinutes() {
+            const ohpMinutesValue = document.getElementById('ohpMinutesInput').value;
+            const formattedValue = formatWithLeadingZeros(parseInt(ohpMinutesValue), 2);
+            sendCommand(`M${formattedValue}`);
+        }
+
+        function setOHPSeconds() {
+            const ohpSecondsValue = document.getElementById('ohpSecondsInput').value;
+            const formattedValue = formatWithLeadingZeros(parseInt(ohpSecondsValue), 2);
+            sendCommand(`S${formattedValue}`);
+        }
+
+        function enableTimeProtection() {
+            sendCommand('X');
+        }
+
+        function disableTimeProtection() {
+            sendCommand('Y');
+        }
+
+        // Event listeners for buttons
+        document.getElementById('connectButton').addEventListener('click', connectToSerialDevice);
+        document.getElementById('disconnectButton').addEventListener('click', disconnectFromSerialDevice);
+        document.getElementById('enableLogsButton').addEventListener('change', enableLogs);
+        document.getElementById('powerOnButton').addEventListener('change', powerOn);
+        document.getElementById('setVoltageButton').addEventListener('click', setVoltage);
+        document.getElementById('setCurrentButton').addEventListener('click', setCurrent);
+        document.getElementById('setOVPButton').addEventListener('click', setOVP);
+        document.getElementById('setOCPButton').addEventListener('click', setOCP);
+        document.getElementById('setOPPButton').addEventListener('click', setOPP);
+        document.getElementById('setOHPHoursButton').addEventListener('click', setOHPHours);
+        document.getElementById('setOHPMinutesButton').addEventListener('click', setOHPMinutes);
+        document.getElementById('setOHPSecondsButton').addEventListener('click', setOHPSeconds);
+        document.getElementById('enableTimeProtectionButton').addEventListener('change', function () {
+            if (this.checked) {
+                enableTimeProtection();
+            } else {
+                disableTimeProtection();
+            }
+        });
+    </script>
+</body>
+</html>

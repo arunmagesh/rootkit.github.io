@@ -10,7 +10,9 @@ some tools i find usefull and made using CHATgpt and have no clue how js works.
 <br>
 <a href="https://rootkit.zip/tools/blefuzz/index.html">ble uuid fuzzer</a>
 <br>
-<a href="https://rootkit.zip/tools/samsungreset/index.html">samsung factory reset(it will seriously erase your samsung phone)</a>
+<a href="https://rootkit.zip/tools/finrisidc6006l/index.html">Finrisi DC6006L Web Control</a>
+<br>
+<a href="https://rootkit.zip/tools/samsungreset/index.html">samsung ussd imei</a>
 <br>
 
 
