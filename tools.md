@@ -22,5 +22,5 @@ some tools i find usefull and made using CHATgpt and have no clue how js works.
 
 some are in my github as well. 
 
-<a href="https://github.com/marunmagesh">GITHUB</a>
+
 
