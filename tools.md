@@ -4,7 +4,7 @@ title: Tools
 permalink: /tools/
 ---
 
-some tools i find usefull and made using CHATgpt and have no clue how js works. 
+some tools i find it useful and fun to make using ChatGPT and use it with caution as i am no developer. 
 
 <a href="https://rootkit.zip/tools/qrfuzz/index.html">qr code fuzzer</a>
 <br>
