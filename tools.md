@@ -14,8 +14,11 @@ some tools i find usefull and made using CHATgpt and have no clue how js works.
 <br>
 <a href="https://rootkit.zip/tools/samsungreset/index.html">samsung ussd imei</a>
 <br>
+<a href="https://rootkit.zip/tools/uartsiml/index.html">UART Simulator-(Alpha)</a>
+<br>
 
 
 some are in my github as well. 
 
+<a href="https://github.com/marunmagesh">GITHUB</a>
 

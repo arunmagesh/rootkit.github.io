@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Serial Console</title>
+    <style>
+        /* Your CSS styles here */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1E1E1E;
+            color: #FFFFFF;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            background-color: #333;
+            color: #FFFFFF;
+            padding: 10px;
+            margin: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+
+        button {
+            background-color: #007ACC;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #00599E;
+        }
+
+        label {
+            font-size: 16px;
+        }
+
+        select, input[type="text"] {
+            font-size: 16px;
+            padding: 5px;
+            margin: 5px;
+            border: 1px solid #666;
+        }
+
+        #console {
+            background-color: #000000;
+            color: #00FF00;
+            font-size: 16px;
+            width: 80%;
+            max-width: 800px;
+            height: 300px;
+            margin-top: 10px;
+            padding: 10px;
+            overflow-y: scroll;
+            white-space: pre-line;
+            border: 1px solid #666;
+        }
+
+        #receivedData {
+            background-color: #000000;
+            color: #00FF00;
+            font-size: 16px;
+            width: 80%;
+            max-width: 800px;
+            margin-top: 10px;
+            padding: 10px;
+            overflow-y: scroll;
+            white-space: pre-line;
+            border: 1px solid #666;
+        }
+
+        #receivedData span.time {
+            font-weight: bold;
+            color: #00FFFF;
+            margin-right: 10px;
+        }
+
+        #receivedData span.local-echo {
+            color: #FF00FF; /* Change local echo text color to purple */
+        }
+
+        #localEchoContainer {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #localEchoContainer label {
+            margin-right: 5px;
+        }
+
+        #disconnectButton {
+            background-color: #FF0000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Web Serial Console</h1>
+
+    <div class="container">
+        <label for="baudRate">Baud Rate:</label>
+        <input type="text" id="baudRate" placeholder="Custom Baud Rate" value="115200">
+
+    </div>
+
+    <div class="container">
+        <label for="newlineSelect">Line Ending:</label>
+        <select id="newlineSelect">
+            <option value="none">None</option>
+            <option value="nl">Newline (NL)</option>
+            <option value="cr">Carriage Return (CR)</option>
+            <option value="nlcr">Both (NL+CR)</option>
+        </select>
+    </div>
+
+    <div id="receivedData"></div>
+
+    <input type="text" id="input" placeholder="Enter text to send">
+    <button id="sendButton">Send</button>
+    
+    <div id="localEchoContainer">
+        <label for="localEcho">Local Echo:</label>
+        <input type="checkbox" id="localEcho">
+    </div>
+
+    <button id="connectButton">Connect to Port</button>
+    <button id="disconnectButton" style="display: none;">Disconnect</button>
+
+    <div class="container">
+        <label for="showHexAsciiSelect">Show as:</label>
+        <select id="showHexAsciiSelect">
+            <option value="ascii">ASCII</option>
+            <option value="hex">Hex</option>
+        </select>
+    </div>
+
+    <div class="container">
+        <label for="showTimeCheckbox">Show Time:</label>
+        <input type="checkbox" id="showTimeCheckbox">
+    </div>
+
+    <!-- Add a container to display the selected port -->
+    <div id="selectedPortContainer">
+        Selected Port: <span id="selectedPortElement">None</span>
+    </div>
+
+    <script>
+        let port;
+        const consoleElement = document.getElementById('console');
+        const inputElement = document.getElementById('input');
+        const sendButton = document.getElementById('sendButton');
+        const connectButton = document.getElementById('connectButton');
+        const disconnectButton = document.getElementById('disconnectButton');
+        const baudRateSelect = document.getElementById('baudRate');
+        const customBaudRateInput = document.getElementById('customBaudRate');
+        const newlineSelect = document.getElementById('newlineSelect');
+        const selectedPortElement = document.getElementById('selectedPortElement'); // Define the selectedPortElement
+        const localEchoCheckbox = document.getElementById('localEcho');
+        const receivedDataElement = document.getElementById('receivedData');
+        const showHexAsciiSelect = document.getElementById('showHexAsciiSelect');
+        const showTimeCheckbox = document.getElementById('showTimeCheckbox');
+
+        async function connectToSerialDevice() {
+            try {
+                const selectedBaudRate = customBaudRateInput.style.display === 'none' ? 
+                    parseInt(baudRateSelect.value) : parseInt(customBaudRateInput.value);
+                
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: selectedBaudRate });
+                disconnectButton.style.display = 'inline';
+                connectButton.style.display = 'none';
+                selectedPortElement.innerText = `Port: Auto, Baud Rate: ${selectedBaudRate}`;
+
+                // Rest of your code for reading data from the port
+                readSerialData();
+            } catch (error) {
+                console.error('Error connecting to serial device:', error);
+            }
+        }
+
+        function readSerialData() {
+            if (port && port.readable) {
+                const decoder = new TextDecoderStream();
+                const readableStreamClosed = port.readable.pipeTo(decoder.writable);
+                const reader = decoder.readable.getReader();
+                const encoder = new TextEncoder();
+                async function read() {
+                    while (true) {
+                        try {
+                            const { value, done } = await reader.read();
+                            if (done) {
+                                console.log('Read done');
+                                break;
+                            }
+
+                            const currentTime = showTimeCheckbox.checked ? getTimeString() + ' ' : '';
+
+                            if (showHexAsciiSelect.value === 'hex') {
+                                const hexText = formatBytesToHex(encoder.encode(value));
+                                console.log('Received:', currentTime + hexText);
+
+                                // Display received data in the receivedDataElement in hex format
+                                const messageDiv = document.createElement('div');
+                                
+                                    // If local echo is enabled, highlight local echo messages
+                                    messageDiv.classList.add('local-echo');
+                                messageDiv.innerHTML = `<span class="time">${currentTime}</span>${hexText}`;
+                                receivedDataElement.appendChild(messageDiv);
+
+                                
+
+                            } else {
+                                const asciiText = value.replace(/\n/g, '<br>');
+                                console.log('Received:', currentTime + asciiText);
+
+                                // Display received data in the receivedDataElement in ASCII format
+                                const messageDiv = document.createElement('div');
+                                
+                                    // If local echo is enabled, highlight local echo messages
+                                    messageDiv.classList.add('local-echo');
+                                messageDiv.innerHTML = `<span class="time">${currentTime}</span>${asciiText}`;
+                                receivedDataElement.appendChild(messageDiv);
+                                
+
+                            }
+				
+                            receivedDataElement.scrollTop = receivedDataElement.scrollHeight;
+
+
+                        } catch (error) {
+                            console.error('Error reading data:', error);
+                        }
+                    }
+                }
+
+                read();
+            }
+        }
+
+        function getTimeString() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        function formatBytesToHex(bytes) {
+            return Array.from(new Uint8Array(bytes))
+                .map(byte => byte.toString(16).padStart(2, '0'))
+                .join(' ');
+        }
+
+        connectButton.addEventListener('click', connectToSerialDevice);
+
+        disconnectButton.addEventListener('click', async () => {
+            if (port && port.readable) {
+                try {
+                    await port.cancel();
+                    await port.close();
+                } catch (error) {
+                    console.error('Error closing the port:', error);
+                }
+                disconnectButton.style.display = 'none';
+                connectButton.style.display = 'inline';
+                selectedPortElement.innerText = 'None';
+            }
+        });
+
+        sendButton.addEventListener('click', async () => {
+            if (port && port.writable) {
+                const textToSend = inputElement.value + (newlineSelect.value === 'none' ? '' : '\n');
+                const encoder = new TextEncoder();
+                const writer = port.writable.getWriter();
+                try {
+                    await writer.write(encoder.encode(textToSend));
+                    writer.releaseLock();
+                    inputElement.value = '';
+                    
+                    // Display sent data with optional time and formatting
+                    const currentTime = showTimeCheckbox.checked ? getTimeString() + ' ' : '';
+                    const formattedText = showHexAsciiSelect.value === 'hex'
+                        ? `<span class="time">${currentTime}</span>${formatBytesToHex(encoder.encode(textToSend))}`
+                        : `<span class="time">${currentTime}</span>${textToSend}`;
+
+                    console.log('Sent:', formattedText);
+
+                    // Display received data in the receivedDataElement
+                    const messageDiv = document.createElement('div');
+                    if (localEchoCheckbox.checked) {
+                        // If local echo is enabled, highlight local echo messages
+                        messageDiv.classList.add('local-echo');
+                    
+                    	messageDiv.innerHTML = formattedText;
+
+			}
+                    receivedDataElement.appendChild(messageDiv);
+                    receivedDataElement.scrollTop = receivedDataElement.scrollHeight;
+                } catch (error) {
+                    console.error('Error sending data:', error);
+                }
+            }
+        });
+
+        // Toggle custom baud rate input field
+        baudRateSelect.addEventListener('change', () => {
+            if (baudRateSelect.value === 'custom') {
+                customBaudRateInput.style.display = 'inline';
+                customBaudRateInput.focus();
+            } else {
+                customBaudRateInput.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
