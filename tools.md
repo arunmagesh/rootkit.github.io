@@ -16,6 +16,8 @@ some tools i find usefull and made using CHATgpt and have no clue how js works.
 <br>
 <a href="https://rootkit.zip/tools/uartsiml/index.html">UART Simulator-(Alpha)</a>
 <br>
+<a href="https://rootkit.zip/tools/ClickRng/index.html">Maybe True Random Number Generator</a>
+<br>
 
 
 some are in my github as well. 

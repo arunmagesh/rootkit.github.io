@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouse-Click Ring Oscillator</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #ringOscillator {
+            width: 200px;
+            height: 200px;
+            border: 2px solid #000;
+            position: relative;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        #indicator {
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #lengthDropdown {
+            font-size: 16px;
+            padding: 5px;
+        }
+
+        #result {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        #clickCounter {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="ringOscillator">
+        <div id="indicator"></div>
+    </div>
+
+    <div id="options">
+        <label for="lengthDropdown">Select Length:</label>
+        <select id="lengthDropdown">
+            <option value="1">1 bit</option>
+            <option value="2">2 bits</option>
+            <option value="8">8 bits</option>
+            <option value="16">16 bits</option>
+            <option value="32">32 bits</option>
+            <option value="64">64 bits</option>
+        </select>
+    </div>
+
+    <div id="result">Random Number: <span id="randomNumber"></span></div>
+    <p id="clickCounter">Clicks Remaining: <span id="remainingClicks">10</span></p>
+    <p>Click the box to generate a CRng(Click Random Number).</p>
+
+    <script>
+        let clicks = [];
+        let clickCount = 0;
+        let startTime, endTime;
+
+        const ringOscillator = document.getElementById('ringOscillator');
+        const indicator = document.getElementById('indicator');
+        const lengthDropdown = document.getElementById('lengthDropdown');
+        const resultElement = document.getElementById('randomNumber');
+        const remainingClicksElement = document.getElementById('remainingClicks');
+
+        ringOscillator.addEventListener('click', handleClick);
+
+        function handleClick() {
+            const currentTime = new Date().getTime();
+
+            if (!startTime) {
+                startTime = currentTime;
+            } else {
+                const timeDifference = currentTime - startTime;
+                clicks.push(timeDifference);
+                startTime = currentTime;
+
+                // Update visual indicator
+                const period = calculateAveragePeriod();
+                const rotationAngle = (timeDifference / period) * 360;
+                indicator.style.transform = `rotate(${rotationAngle}deg)`;
+
+                clickCount++;
+
+                if (clickCount === 10) {
+                    clickCount = 0;
+
+                    // Simulate TRNG based on average click intervals
+                    const trngValue = generateTRNGValue();
+                    resultElement.textContent = trngValue;
+                    remainingClicksElement.textContent = 10; // Reset click count
+                } else {
+                    remainingClicksElement.textContent = 10 - clickCount;
+                }
+            }
+        }
+
+        function calculateAveragePeriod() {
+            if (clicks.length === 0) return 0;
+
+            const sum = clicks.reduce((acc, click) => acc + click, 0);
+            return Math.round(sum / clicks.length);
+        }
+
+        function generateTRNGValue() {
+            const selectedLength = parseInt(lengthDropdown.value, 10);
+            const trngValue = clicks.reduce((acc, click) => acc ^ click, 0);
+
+            // Ensure the result fits within the selected bit length
+            const maxBitValue = 2 ** selectedLength;
+            return trngValue % maxBitValue;
+        }
+    </script>
+</body>
+</html>
