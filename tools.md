@@ -18,7 +18,8 @@ some tools i find it useful and fun to make using ChatGPT and use it with cautio
 <br>
 <a href="https://rootkit.zip/tools/ClickRng/index.html">Maybe True Random Number Generator</a>
 <br>
-
+<a href="https://rootkit.zip/tools/Magic/index.html">Magic of the browser</a>
+<br>
 
 some are in my github as well. 
 
