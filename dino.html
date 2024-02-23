@@ -10,17 +10,22 @@
         #score { position: absolute; top: 10px; left: 10px; font-family: Arial, sans-serif; font-size: 24px; color: white; }
         #game-over { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: Arial, sans-serif; font-size: 36px; color: white; }
         #reset-button { display: none; position: absolute; top: 10px; right: 10px; padding: 10px; font-family: Arial, sans-serif; font-size: 18px; background-color: #333; color: white; border: none; cursor: pointer; }
+        #debug-checkbox { position: absolute; bottom: 10px; left: 10px; font-family: Arial, sans-serif; font-size: 18px; color: white; }
     </style>
 </head>
 <body>
     <div id="score">Score: 0</div>
     <div id="game-over">Game Over<br>Your score: <span id="final-score"></span><br><button id="reset-button">Restart</button></div>
+    <input type="checkbox" id="debug-checkbox">
+    //<label for="debug-checkbox">Debug Mode</label>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let score = 0;
         let isJumping = false;
         let isGameOver = false;
         let gameSpeed = 0.1;
+        let debugMode = false;
+        let spawnRate = 2000; // Initial spawn rate in milliseconds
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -72,7 +77,7 @@
                         enemy.position.x = 20;
                     }
 
-                    if (dinosaur.position.distanceTo(enemy.position) < 1) {
+                    if (!debugMode && dinosaur.position.distanceTo(enemy.position) < 1) {
                         handleCollision();
                     }
                 }
@@ -100,9 +105,13 @@
             }
         });
 
+        document.getElementById('debug-checkbox').addEventListener('change', event => {
+            debugMode = event.target.checked;
+        });
+
         function jump() {
             const jumpHeight = 2;
-            const jumpDuration = 500; // milliseconds
+            const jumpDuration = 5   / Math.max(gameSpeed, 0.1); // milliseconds
 
             const initialY = dinosaur.position.y;
             const targetY = initialY + jumpHeight;
@@ -144,22 +153,24 @@
             }
             enemies.length = 0;
             gameSpeed = 0.1;
+            spawnRate = 2000;
             document.getElementById('game-over').style.display = 'none';
             document.getElementById('reset-button').style.display = 'none';
             updateScore();
         }
 
-        // Spawn enemies at regular intervals
+        // Spawn enemies at regular intervals based on the spawn rate
         setInterval(() => {
             if (!isGameOver) {
                 spawnEnemy();
                 score++;
                 updateScore();
                 if (score >= 10 && gameSpeed < 0.3) {
-                    gameSpeed += 0.05; // Increase game speed after reaching a score of 10
+                    gameSpeed += 0.01; // Increase game speed after reaching a score of 10
+                    spawnRate -= 500; // Decrease spawn rate after reaching a score of 10
                 }
             }
-        }, 2000);
+        }, spawnRate);
 
         function updateScore() {
             document.getElementById('score').innerText = 'Score: ' + score;
