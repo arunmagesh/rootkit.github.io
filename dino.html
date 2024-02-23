@@ -9,11 +9,12 @@
         canvas { display: block; }
         #score { position: absolute; top: 10px; left: 10px; font-family: Arial, sans-serif; font-size: 24px; color: white; }
         #game-over { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: Arial, sans-serif; font-size: 36px; color: white; }
+        #reset-button { display: none; position: absolute; top: 10px; right: 10px; padding: 10px; font-family: Arial, sans-serif; font-size: 18px; background-color: #333; color: white; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
     <div id="score">Score: 0</div>
-    <div id="game-over">Game Over<br>Your score: <span id="final-score"></span><br>Press "R" to restart</div>
+    <div id="game-over">Game Over<br>Your score: <span id="final-score"></span><br><button id="reset-button">Restart</button></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let score = 0;
@@ -87,7 +88,14 @@
                 isJumping = true;
                 jump();
             }
-            if (event.code === 'KeyR' && isGameOver) {
+        });
+
+        document.addEventListener('click', event => {
+            if (!isJumping && !isGameOver) {
+                isJumping = true;
+                jump();
+            }
+            if (isGameOver && event.target.id === 'reset-button') {
                 restartGame();
             }
         });
@@ -125,6 +133,7 @@
             isGameOver = true;
             document.getElementById('final-score').textContent = score;
             document.getElementById('game-over').style.display = 'block';
+            document.getElementById('reset-button').style.display = 'block';
         }
 
         function restartGame() {
@@ -136,6 +145,7 @@
             enemies.length = 0;
             gameSpeed = 0.1;
             document.getElementById('game-over').style.display = 'none';
+            document.getElementById('reset-button').style.display = 'none';
             updateScore();
         }
 
