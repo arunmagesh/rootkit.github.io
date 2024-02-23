@@ -12,5 +12,6 @@ Thanks for visiting, and happy hacking!
 
 CV in here https://github.com/arunmagesh/rootkit.github.io/blob/main/data/arun_magesh_resume_2023_nov.pdf
 
+Game: https://rootkit.zip/dino.html
 
 [jekyll-organization]: https://github.com/jekyll
