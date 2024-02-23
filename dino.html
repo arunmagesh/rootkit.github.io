@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Dinosaur Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #score { position: absolute; top: 10px; left: 10px; font-family: Arial, sans-serif; font-size: 24px; color: white; }
+        #game-over { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: Arial, sans-serif; font-size: 36px; color: white; }
+    </style>
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <div id="game-over">Game Over<br>Your score: <span id="final-score"></span><br>Press "R" to restart</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let score = 0;
+        let isJumping = false;
+        let isGameOver = false;
+        let gameSpeed = 0.1;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const groundGeometry = new THREE.BoxGeometry(200, 0.5, 5);
+        const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.position.y = -1;
+        scene.add(ground);
+
+        const dinosaurGeometry = new THREE.BoxGeometry(1, 2, 1);
+        const dinosaurMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const dinosaur = new THREE.Mesh(dinosaurGeometry, dinosaurMaterial);
+        dinosaur.position.y = 0;
+        dinosaur.position.z = -3;
+        scene.add(dinosaur);
+
+        const enemies = [];
+
+        function spawnEnemy() {
+            const enemyGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const enemyMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+            const enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
+            enemy.position.y = -0.5;
+            enemy.position.z = -3;
+            enemy.position.x = 20;
+            scene.add(enemy);
+            enemies.push(enemy);
+        }
+
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!isGameOver) {
+                ground.position.x -= gameSpeed;
+                if (ground.position.x < -50) {
+                    ground.position.x = 0;
+                }
+
+                for (const enemy of enemies) {
+                    enemy.position.x -= gameSpeed;
+
+                    if (enemy.position.x < -20) {
+                        enemy.position.x = 20;
+                    }
+
+                    if (dinosaur.position.distanceTo(enemy.position) < 1) {
+                        handleCollision();
+                    }
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        document.addEventListener('keydown', event => {
+            if (event.code === 'Space' && !isJumping && !isGameOver) {
+                isJumping = true;
+                jump();
+            }
+            if (event.code === 'KeyR' && isGameOver) {
+                restartGame();
+            }
+        });
+
+        function jump() {
+            const jumpHeight = 2;
+            const jumpDuration = 500; // milliseconds
+
+            const initialY = dinosaur.position.y;
+            const targetY = initialY + jumpHeight;
+
+            const startTime = Date.now();
+
+            function update() {
+                const elapsed = Date.now() - startTime;
+                const progress = elapsed / jumpDuration;
+
+                if (progress < 1) {
+                    dinosaur.position.y = initialY + (targetY - initialY) * easeOutQuad(progress);
+                    requestAnimationFrame(update);
+                } else {
+                    dinosaur.position.y = initialY;
+                    isJumping = false;
+                }
+            }
+
+            update();
+        }
+
+        function easeOutQuad(t) {
+            return t * (2 - t);
+        }
+
+        function handleCollision() {
+            isGameOver = true;
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('game-over').style.display = 'block';
+        }
+
+        function restartGame() {
+            score = 0;
+            isGameOver = false;
+            for (const enemy of enemies) {
+                scene.remove(enemy);
+            }
+            enemies.length = 0;
+            gameSpeed = 0.1;
+            document.getElementById('game-over').style.display = 'none';
+            updateScore();
+        }
+
+        // Spawn enemies at regular intervals
+        setInterval(() => {
+            if (!isGameOver) {
+                spawnEnemy();
+                score++;
+                updateScore();
+                if (score >= 10 && gameSpeed < 0.3) {
+                    gameSpeed += 0.05; // Increase game speed after reaching a score of 10
+                }
+            }
+        }, 2000);
+
+        function updateScore() {
+            document.getElementById('score').innerText = 'Score: ' + score;
+        }
+    </script>
+</body>
+</html>
